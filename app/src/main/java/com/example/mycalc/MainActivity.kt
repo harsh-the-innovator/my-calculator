@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
+import java.lang.ArithmeticException
 
 class MainActivity : AppCompatActivity() {
 
@@ -78,33 +78,16 @@ class MainActivity : AppCompatActivity() {
 
     private val myBtnClickListener = View.OnClickListener { view ->
         when (view.id) {
-            R.id.btnAdd -> onAddBtnPress()
-            R.id.btnSubtract -> onSubtractBtnPress()
-            R.id.btnMultiply -> onMultiplyBtnPress()
-            R.id.btnDivide -> onDivideBtnPress()
+            R.id.btnAdd -> onOperator(view)
+            R.id.btnSubtract -> onOperator(view)
+            R.id.btnMultiply -> onOperator(view)
+            R.id.btnDivide -> onOperator(view)
             R.id.btnClear -> onTextClear()
-            R.id.btnEqual -> onEqualBtnPress()
+            R.id.btnEqual -> onEqualBtnPress(view)
             R.id.btnDot -> onDecimalBtnPress()
             else -> onDigit(view)
         }
     }
-
-    private fun onAddBtnPress() {
-        Toast.makeText(this,"Add",Toast.LENGTH_SHORT).show()
-    }
-
-    private fun onSubtractBtnPress() {
-        Toast.makeText(this,"Subtract",Toast.LENGTH_SHORT).show()
-    }
-
-    private fun onMultiplyBtnPress() {
-        Toast.makeText(this,"Multiply",Toast.LENGTH_SHORT).show()
-    }
-
-    private fun onDivideBtnPress() {
-        Toast.makeText(this,"Divide",Toast.LENGTH_SHORT).show()
-    }
-
 
     private fun onDigit(view: View){
         tvInput?.append((view as Button).text)
@@ -116,8 +99,75 @@ class MainActivity : AppCompatActivity() {
         tvInput?.text = ""
     }
 
-    private fun onEqualBtnPress() {
-        Toast.makeText(this,"Equal",Toast.LENGTH_SHORT).show()
+    private fun onEqualBtnPress(view: View) {
+        if(lastNumeric){
+            var tvValue = tvInput?.text.toString()
+            var prefix = ""
+            try {
+                if(tvValue.startsWith("-")){
+                    prefix = "-"
+                    tvValue = tvValue.substring(1)
+                }
+
+                if(tvValue.contains("-")){
+                    val splitValue = tvValue.split("-")
+
+                    var operandOne = splitValue[0]
+                    var operandTwo = splitValue[1]
+
+                    if(prefix.isNotEmpty()){
+                        operandOne = prefix + operandOne
+                    }
+                    val result = operandOne.toDouble() - operandTwo.toDouble()
+                    tvInput?.text = removeZeroAfterDecimal(result.toString())
+                }else if(tvValue.contains("+")){
+                    val splitValue = tvValue.split("+")
+
+                    var operandOne = splitValue[0]
+                    var operandTwo = splitValue[1]
+
+                    if(prefix.isNotEmpty()){
+                        operandOne = prefix + operandOne
+                    }
+                    val result = operandOne.toDouble() + operandTwo.toDouble()
+                    tvInput?.text = removeZeroAfterDecimal(result.toString())
+                }else if(tvValue.contains("*")){
+                    val splitValue = tvValue.split("*")
+
+                    var operandOne = splitValue[0]
+                    var operandTwo = splitValue[1]
+
+                    if(prefix.isNotEmpty()){
+                        operandOne = prefix + operandOne
+                    }
+                    val result = operandOne.toDouble() * operandTwo.toDouble()
+                    tvInput?.text = removeZeroAfterDecimal(result.toString())
+                }else if(tvValue.contains("/")){
+                    val splitValue = tvValue.split("/")
+
+                    var operandOne = splitValue[0]
+                    var operandTwo = splitValue[1]
+
+                    if(prefix.isNotEmpty()){
+                        operandOne = prefix + operandOne
+                    }
+
+                    val result = operandOne.toDouble() / operandTwo.toDouble()
+                    tvInput?.text = removeZeroAfterDecimal(result.toString())
+                }
+            }catch (e:ArithmeticException){
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun removeZeroAfterDecimal(result:String):String{
+        var value = result
+        if(result.contains(".0")){
+            value = result.substring(0,result.length-2)
+        }
+
+        return value
     }
 
 
@@ -126,6 +176,28 @@ class MainActivity : AppCompatActivity() {
             tvInput?.append(".")
             lastNumeric = false
             lastDot = true
+        }
+    }
+
+    private fun onOperator(view: View){
+        tvInput?.text?.let {
+            if(lastNumeric && !isOperatorAdded(it.toString())){
+                tvInput?.append((view as Button).text)
+                lastNumeric = false
+                lastDot = false
+            }
+        }
+    }
+
+    private fun isOperatorAdded(value:String):Boolean{
+        return if(value.startsWith("-")){
+            false
+        }else{
+            value.contains("/") ||
+            value.contains("*") ||
+            value.contains("+") ||
+            value.contains("-")
+
         }
     }
 
